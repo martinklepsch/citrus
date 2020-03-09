@@ -14,17 +14,15 @@
     (release-fn id))
   (vreset! scheduled? (schedule-fn f)))
 
-(defn citrus-default-handler
-  "Implements Citrus' default event handling (as of 3.2.3).
-
-  This function can be copied into your project and adapted to your needs.
+(defn adapted-default-handler
+  "An adapted event handler for Citrus that passes the entire reconciler
+  state as fourth argument to controller methods.
 
   `events` is expected to be a list of events (tuples):
 
      [ctrl event-key event-args]"
   [reconciler events]
   (let [controllers (.-controllers reconciler)
-        co-effects (.-co_effects reconciler)
         effect-handlers (.-effect_handlers reconciler)
         state-atom (.-state reconciler)]
     (reset!
@@ -36,13 +34,7 @@
           (do
             (assert (contains? controllers ctrl) (str "Controller " ctrl " is not found"))
             (let [ctrl-fn (get controllers ctrl)
-                  cofx (get-in (.-meta ctrl) [:citrus event-key :cofx])
-                  cofx (reduce
-                         (fn [cofx [k & args]]
-                           (assoc cofx k (apply (co-effects k) args)))
-                         {}
-                         cofx)
-                  effects (ctrl-fn event-key event-args (get state ctrl) cofx)]
+                  effects (ctrl-fn event-key event-args (get state ctrl) state)]
               (m/doseq [effect (dissoc effects :state)]
                 (let [[eff-type effect] effect]
                   (when (s/check-asserts?)

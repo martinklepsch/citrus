@@ -2,6 +2,7 @@
   (:require-macros [citrus.core :as citrus])
   (:require [rum.core :as rum]
             [citrus.core :as citrus]
+            [citrus.reconciler]
             [goog.dom :as dom]
             [cljs.spec.alpha :as s]
             [expound.alpha :as expound]))
@@ -113,6 +114,10 @@
 (defonce reconciler
          (citrus/reconciler
            {:state           (atom {})
+            ;; a custom handler can come from anywhere, we just adapted
+            ;; Citrus' built in handler so that the diff makes our changes
+            ;; easy to see
+            :default-handler citrus.reconciler/adapted-default-handler
             :controllers     {:github control-github}
             :effect-handlers {:effect/http http}}))
 
